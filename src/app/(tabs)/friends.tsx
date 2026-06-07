@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { ReactNode, useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import {
   searchProfilesByUsername,
@@ -17,10 +17,13 @@ import { relationForUser } from '@/domain/friendship';
 import { useTheme } from '@/hooks/use-theme';
 import { otherProfile, useFriends } from '@/hooks/useFriends';
 
+type TabKey = 'friends' | 'incoming';
+
 export default function FriendsScreen() {
   const theme = useTheme();
-  const { me, friends, incoming, outgoing, domainRows, refresh } = useFriends();
+  const { me, friends, incoming, domainRows, refresh } = useFriends();
 
+  const [tab, setTab] = useState<TabKey>('friends');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ProfileBrief[]>([]);
   const [searching, setSearching] = useState(false);
@@ -46,7 +49,7 @@ export default function FriendsScreen() {
     setResults(data);
   }
 
-  // 액션 실행 후 목록 갱신 (검색 결과 버튼 상태도 records 기준으로 자동 갱신됨)
+  // 액션 실행 후 목록 갱신 (검색 결과 버튼 상태도 records 기준으로 자동 갱신)
   async function run(p: Promise<{ error: string | null }>, errTitle: string) {
     const { error } = await p;
     if (error) Alert.alert(errTitle, error);
@@ -80,6 +83,13 @@ export default function FriendsScreen() {
     }
   }
 
+  function confirmRemoveFriend(id: string) {
+    Alert.alert('친구 삭제', '정말 삭제하시겠어요?', [
+      { text: '취소', style: 'cancel' },
+      { text: '삭제', style: 'destructive', onPress: () => run(removeFriendship(id), '삭제 실패') },
+    ]);
+  }
+
   return (
     <Screen scroll padded contentStyle={styles.content}>
       {/* 검색 */}
@@ -101,102 +111,95 @@ export default function FriendsScreen() {
 
       {/* 검색 결과 */}
       {searched && (
-        <Section title="검색 결과">
+        <View style={styles.section}>
+          <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
+            검색 결과
+          </ThemedText>
           {results.length === 0 ? (
             <Empty text="일치하는 아이디가 없습니다." />
           ) : (
-            results.map((p) => (
-              <PersonRow key={p.id} profile={p} right={searchResultAction(p)} />
-            ))
+            results.map((p) => <PersonRow key={p.id} profile={p} right={searchResultAction(p)} />)
           )}
-        </Section>
+        </View>
       )}
 
-      {/* 받은 요청 */}
-      <Section title={`받은 요청${incoming.length ? ` (${incoming.length})` : ''}`}>
-        {incoming.length === 0 ? (
-          <Empty text="받은 친구 요청이 없습니다." />
-        ) : (
-          incoming.map((r) => (
-            <PersonRow
-              key={r.id}
-              profile={otherProfile(r, me)}
-              right={
-                <View style={styles.rowBtns}>
-                  <Pill label="수락" onPress={() => run(acceptFriendRequest(r.id), '수락 실패')} />
-                  <Pill
-                    label="거절"
-                    variant="outline"
-                    onPress={() => run(removeFriendship(r.id), '거절 실패')}
-                  />
-                </View>
-              }
-            />
-          ))
-        )}
-      </Section>
+      {/* 토글: 내 친구 / 받은 요청 */}
+      <Segmented
+        value={tab}
+        onChange={setTab}
+        options={[
+          { key: 'friends', label: `내 친구 ${friends.length}` },
+          { key: 'incoming', label: `받은 요청 ${incoming.length}` },
+        ]}
+      />
 
-      {/* 보낸 요청 */}
-      {outgoing.length > 0 && (
-        <Section title={`보낸 요청 (${outgoing.length})`}>
-          {outgoing.map((r) => (
-            <PersonRow
-              key={r.id}
-              profile={otherProfile(r, me)}
-              right={
-                <Pill
-                  label="요청 취소"
-                  variant="outline"
-                  onPress={() => run(removeFriendship(r.id), '취소 실패')}
-                />
-              }
-            />
-          ))}
-        </Section>
-      )}
-
-      {/* 내 친구 */}
-      <Section title={`내 친구${friends.length ? ` (${friends.length})` : ''}`}>
-        {friends.length === 0 ? (
+      {/* 선택된 탭의 목록 */}
+      {tab === 'friends' ? (
+        friends.length === 0 ? (
           <Empty text="아직 친구가 없습니다. 아이디로 검색해 친구를 추가해 보세요." />
         ) : (
           friends.map((r) => (
             <PersonRow
               key={r.id}
               profile={otherProfile(r, me)}
-              right={
-                <Pill
-                  label="삭제"
-                  variant="outline"
-                  onPress={() =>
-                    Alert.alert('친구 삭제', '정말 삭제하시겠어요?', [
-                      { text: '취소', style: 'cancel' },
-                      {
-                        text: '삭제',
-                        style: 'destructive',
-                        onPress: () => run(removeFriendship(r.id), '삭제 실패'),
-                      },
-                    ])
-                  }
-                />
-              }
+              right={<Pill label="삭제" variant="outline" onPress={() => confirmRemoveFriend(r.id)} />}
             />
           ))
-        )}
-      </Section>
+        )
+      ) : incoming.length === 0 ? (
+        <Empty text="받은 친구 요청이 없습니다." />
+      ) : (
+        incoming.map((r) => (
+          <PersonRow
+            key={r.id}
+            profile={otherProfile(r, me)}
+            right={
+              <View style={styles.rowBtns}>
+                <Pill label="수락" onPress={() => run(acceptFriendRequest(r.id), '수락 실패')} />
+                <Pill
+                  label="거절"
+                  variant="outline"
+                  onPress={() => run(removeFriendship(r.id), '거절 실패')}
+                />
+              </View>
+            }
+          />
+        ))
+      )}
     </Screen>
   );
 }
 
 // ───────── 하위 컴포넌트 ─────────
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Segmented({
+  value,
+  onChange,
+  options,
+}: {
+  value: TabKey;
+  onChange: (key: TabKey) => void;
+  options: { key: TabKey; label: string }[];
+}) {
+  const theme = useTheme();
   return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-        {title}
-      </ThemedText>
-      {children}
+    <View style={[styles.segmented, { borderColor: theme.backgroundSelected }]}>
+      {options.map((o) => {
+        const active = o.key === value;
+        return (
+          <TouchableOpacity
+            key={o.key}
+            style={[styles.segment, active && styles.segmentActive]}
+            onPress={() => onChange(o.key)}
+          >
+            <ThemedText
+              style={[styles.segmentText, active ? styles.segmentTextActive : { color: theme.textSecondary }]}
+            >
+              {o.label}
+            </ThemedText>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -262,7 +265,7 @@ function Pill({
 }
 
 const styles = StyleSheet.create({
-  content: { gap: Spacing.four, paddingBottom: Spacing.five },
+  content: { gap: Spacing.three, paddingBottom: Spacing.five },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -280,7 +283,24 @@ const styles = StyleSheet.create({
 
   section: { gap: Spacing.two },
   sectionTitle: { textTransform: 'uppercase', letterSpacing: 0.5 },
-  empty: { paddingVertical: Spacing.two },
+  empty: { paddingVertical: Spacing.three },
+
+  segmented: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    padding: 2,
+    gap: 2,
+  },
+  segment: {
+    flex: 1,
+    paddingVertical: Spacing.two,
+    alignItems: 'center',
+    borderRadius: Spacing.one,
+  },
+  segmentActive: { backgroundColor: '#3c87f7' },
+  segmentText: { fontWeight: '600', fontSize: 14 },
+  segmentTextActive: { color: '#ffffff' },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingVertical: Spacing.one },
   rowText: { flex: 1 },
