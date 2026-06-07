@@ -511,6 +511,7 @@ export type Database = {
         Args: { p_review_id: string; p_uid: string }
         Returns: boolean
       }
+      username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
