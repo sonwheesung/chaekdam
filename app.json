@@ -37,6 +37,13 @@
             "imageWidth": 76
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "책 표지와 독후감 사진을 첨부하기 위해 사진 접근 권한이 필요합니다.",
+          "cameraPermission": "책 페이지를 촬영하기 위해 카메라 권한이 필요합니다."
+        }
       ]
     ],
     "experiments": {

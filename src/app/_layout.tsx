@@ -30,6 +30,10 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="book/[id]" options={{ headerShown: true, title: '책' }} />
           <Stack.Screen
+            name="book/new"
+            options={{ headerShown: true, title: '책 등록', presentation: 'modal' }}
+          />
+          <Stack.Screen
             name="review/new"
             options={{ headerShown: true, title: '독후감 작성', presentation: 'modal' }}
           />
