@@ -21,22 +21,28 @@
 
 ## 2. 푸시 알림 발송 (스펙 §E-11, §6-8)
 
-인앱 알림 적재(트리거)·알림 설정(전체/야간/세분화)·발송 정책 순수 함수
-(`src/domain/notifications.ts`)는 완료. **실제 Expo Push 발송**만 남았다.
+서버/코드 측은 **모두 완료**. 남은 건 **dev build + EAS 프로젝트(푸시 자격증명)** 뿐이다.
 
-구현 순서:
-1. 푸시 토큰 등록(dev build 필요):
-   - `npx expo install expo-notifications`
-   - 로그인 후 `getExpoPushTokenAsync()` → `push_tokens` 테이블에 upsert
-     (테이블/RLS 이미 있음: 본인 행만 쓰기)
-   - 알림 권한 요청 처리(스펙 §10)
-2. Edge Function 배포(작성 완료: `supabase/functions/send-push/index.ts`):
-   - `supabase functions deploy send-push`
-   - 시크릿: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-3. 트리거 연결: 대시보드 › Database › Webhooks → `notifications` INSERT →
-   send-push 함수 URL 호출(헤더에 service_role). 함수가 설정/야간/토큰을 확인해 Expo Push 발송.
-4. 타임존: 현재 함수는 KST(+9) 가정. 정확히 하려면 `profiles`에 사용자 timezone 컬럼 추가 후
-   야간 판정에 사용(스펙 §5 주의사항).
+이미 완료(코드/서버):
+- ✅ 토큰 등록: 로그인 시 `registerForPushNotifications()` 호출(`src/lib/push.ts`, `app/_layout.tsx`),
+  로그아웃 시 해제. 같은 기기 토큰을 현재 유저로 귀속하는 `register_push_token` RPC(migration 0007).
+- ✅ Edge Function 배포됨: `supabase/functions/send-push`(설정/야간/세분화/토큰 확인 후 Expo Push).
+- ✅ 웹훅 연결됨: `notifications` INSERT → pg_net 으로 함수 호출(migration 0006).
+- ✅ 알림 설정/발송 정책 순수 함수 + 테스트(`src/domain/notifications.ts`).
+
+남은 작업(네이티브):
+1. **EAS 프로젝트 연결**: `eas init` → `app.json`에 `extra.eas.projectId` 생성
+   (이게 있어야 `getExpoPushTokenAsync`가 토큰을 발급. 없으면 push.ts가 조용히 건너뜀).
+2. **dev build 생성**: `eas build --profile development --platform android`
+   - Android 푸시 자격증명(FCM v1)은 EAS가 빌드 시 자동 생성/관리(동의만 하면 됨).
+   - iOS는 APNs 키(Apple 개발자 계정) 필요.
+3. dev build 앱에서 로그인 → 권한 허용 → `push_tokens`에 실제 토큰 적재 →
+   누군가 독후감/댓글/좋아요/초대 시 잠금화면 푸시 수신.
+4. 타임존: 현재 함수는 KST(+9) 가정. 정확히 하려면 `profiles`에 timezone 컬럼 추가 후
+   야간 판정에 사용(스펙 §5 주의).
+
+> 검증: 토큰 등록/재귀속 RPC, Edge Function(토큰 없을 때 "no tokens"), 웹훅 트리거는
+> 원격에서 확인됨. 실제 단말 푸시 수신만 dev build 에서 확인하면 끝.
 
 ## 참고
 - 발송 정책(전체 off / 야간 구간 / 세분화)은 `src/domain/notifications.ts`의 `shouldSendPush`로

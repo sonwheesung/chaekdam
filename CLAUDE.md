@@ -68,7 +68,7 @@ npx supabase gen types typescript --linked > src/types/database.ts  # 타입 재
 - [x] 5. 독후감 폼(인용·페이지/단원·본문·이미지)+피드+상세
 - [~] 6. OCR 카메라 플로우 — **수동 인용 입력으로 대체**, OCR은 dev build 필요 → `DEV_BUILD.md`
 - [x] 7. 댓글·좋아요
-- [~] 8. 알림 — 인앱 적재 트리거 + 설정(전체/야간/세분화) 완료, **푸시 발송은 dev build+Edge Function 배포 필요** → `DEV_BUILD.md`
+- [~] 8. 알림 — 인앱 적재 트리거 + 설정 + **푸시 발송 서버/코드 완료(토큰 등록 RPC·Edge Function 배포·웹훅)**, dev build(EAS projectId)만 남음 → `DEV_BUILD.md`
 - [x] 9. 인앱 알림 화면 + 읽음 처리
 - [x] 10. 빈 상태/로딩/권한(이미지) 처리
 

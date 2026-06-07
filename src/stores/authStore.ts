@@ -1,6 +1,7 @@
 import type { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
 
+import { unregisterPushToken } from '@/lib/push';
 import { supabase } from '@/lib/supabase';
 
 interface SignUpParams {
@@ -61,6 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   signOut: async () => {
+    await unregisterPushToken();
     await supabase.auth.signOut();
   },
 }));

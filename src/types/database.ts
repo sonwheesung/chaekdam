@@ -511,6 +511,10 @@ export type Database = {
         Args: { p_review_id: string; p_uid: string }
         Returns: boolean
       }
+      register_push_token: {
+        Args: { p_platform: string; p_token: string }
+        Returns: undefined
+      }
       username_available: { Args: { p_username: string }; Returns: boolean }
     }
     Enums: {

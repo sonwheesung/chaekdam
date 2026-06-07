@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, useColorScheme, View } from 'react-native';
 
+import { registerForPushNotifications } from '@/lib/push';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function RootLayout() {
@@ -12,6 +13,12 @@ export default function RootLayout() {
   const initialize = useAuthStore((s) => s.initialize);
 
   useEffect(() => initialize(), [initialize]);
+
+  // 로그인(세션 생성) 시 이 기기의 푸시 토큰을 현재 사용자로 등록/귀속
+  const userId = session?.user?.id;
+  useEffect(() => {
+    if (userId) registerForPushNotifications();
+  }, [userId]);
 
   // 초기 세션 복원이 끝나기 전엔 로딩 표시 (로그인/탭 깜빡임 방지)
   if (!initialized) {
