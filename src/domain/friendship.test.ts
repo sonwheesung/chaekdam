@@ -2,13 +2,15 @@ import {
   areFriends,
   canInviteToBook,
   canSendFriendRequest,
+  relationForUser,
   type FriendshipRow,
 } from '@/domain/friendship';
 
 const rows: FriendshipRow[] = [
-  { requesterId: 'alice', addresseeId: 'bob', status: 'accepted' },
-  { requesterId: 'carol', addresseeId: 'alice', status: 'pending' },
-  { requesterId: 'dave', addresseeId: 'alice', status: 'blocked' },
+  { id: 'f1', requesterId: 'alice', addresseeId: 'bob', status: 'accepted' },
+  { id: 'f2', requesterId: 'carol', addresseeId: 'alice', status: 'pending' },
+  { id: 'f3', requesterId: 'dave', addresseeId: 'alice', status: 'blocked' },
+  { id: 'f4', requesterId: 'alice', addresseeId: 'erin', status: 'pending' },
 ];
 
 describe('areFriends', () => {
@@ -50,5 +52,32 @@ describe('canInviteToBook', () => {
 
   it('초대자가 멤버가 아니면 불가', () => {
     expect(canInviteToBook(rows, 'alice', 'bob', false)).toBe(false);
+  });
+});
+
+describe('relationForUser (alice 기준)', () => {
+  it('자기 자신', () => {
+    expect(relationForUser(rows, 'alice', 'alice').kind).toBe('self');
+  });
+  it('친구(accepted)', () => {
+    expect(relationForUser(rows, 'alice', 'bob')).toEqual({ kind: 'friends', friendshipId: 'f1' });
+  });
+  it('상대가 보낸 요청 → request_received', () => {
+    expect(relationForUser(rows, 'alice', 'carol')).toEqual({
+      kind: 'request_received',
+      friendshipId: 'f2',
+    });
+  });
+  it('내가 보낸 요청 → request_sent', () => {
+    expect(relationForUser(rows, 'alice', 'erin')).toEqual({
+      kind: 'request_sent',
+      friendshipId: 'f4',
+    });
+  });
+  it('차단', () => {
+    expect(relationForUser(rows, 'alice', 'dave').kind).toBe('blocked');
+  });
+  it('관계 없음', () => {
+    expect(relationForUser(rows, 'alice', 'zoe').kind).toBe('none');
   });
 });
