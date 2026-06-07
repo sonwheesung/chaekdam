@@ -6,7 +6,9 @@
 소통하는 소셜 독서 앱. 상세 스펙은 `책담_SPEC.md` 참조.
 
 ## 기술 스택
-- React Native + Expo (SDK 56, **dev build** — OCR가 Expo Go에서 안 돌아감) / TypeScript
+- React Native + Expo (**SDK 54**) / TypeScript
+  - 현재 단계(인증~독후감 텍스트)는 **Expo Go(54)**로 개발 가능.
+  - **OCR 단계(스펙 §6-6, ML Kit)부터는 dev build 필수** — 그때 `eas build --profile development`.
 - Expo Router(파일 기반 라우팅, typed routes), Zustand(상태)
 - Supabase(PostgreSQL + Auth + Storage + Realtime + Edge Functions)
 - 테스트: Jest (jest-expo preset)
