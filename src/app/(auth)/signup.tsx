@@ -57,7 +57,7 @@ export default function SignUpScreen() {
       />
       <TextInput
         style={inputStyle}
-        placeholder="표시 이름"
+        placeholder="이름"
         placeholderTextColor={theme.textSecondary}
         value={displayName}
         onChangeText={setDisplayName}
