@@ -11,6 +11,7 @@ import {
   type BookMember,
 } from '@/api/books';
 import { fetchFriendships, type ProfileBrief } from '@/api/friends';
+import { fetchReviewsByBook, type ReviewListItem } from '@/api/reviews';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -27,19 +28,22 @@ export default function BookDetailScreen() {
   const [book, setBook] = useState<Book | null>(null);
   const [members, setMembers] = useState<BookMember[]>([]);
   const [invitable, setInvitable] = useState<ProfileBrief[]>([]);
+  const [reviews, setReviews] = useState<ReviewListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
-    const [b, m, fr, pend] = await Promise.all([
+    const [b, m, fr, pend, rv] = await Promise.all([
       fetchBook(id),
       fetchBookMembers(id),
       fetchFriendships(),
       fetchPendingInviteeIds(id),
+      fetchReviewsByBook(id),
     ]);
     setBook(b.data);
     setMembers(m.data);
+    setReviews(rv.data);
     const memberIds = new Set(m.data.map((x) => x.user_id));
     const pendingIds = new Set(pend.data);
     const friends = fr.data
@@ -158,16 +162,66 @@ export default function BookDetailScreen() {
         )}
       </View>
 
-      {/* 독후감 피드 (다음 단계에서 연결) */}
+      {/* 독후감 피드 */}
       <View style={styles.section}>
         <ThemedText type="smallBold" themeColor="textSecondary" style={styles.sectionTitle}>
-          독후감
+          독후감 ({reviews.length})
         </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
-          이 책의 독후감 피드가 여기에 표시됩니다.
-        </ThemedText>
+        {reviews.length === 0 ? (
+          <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+            아직 독후감이 없습니다. "독후감 쓰기"로 첫 글을 남겨보세요.
+          </ThemedText>
+        ) : (
+          reviews.map((r) => <ReviewCard key={r.id} review={r} />)
+        )}
       </View>
     </Screen>
+  );
+}
+
+function ReviewCard({ review }: { review: ReviewListItem }) {
+  const location =
+    review.page_number != null
+      ? `p.${review.page_number}`
+      : review.chapter
+        ? review.chapter
+        : null;
+  return (
+    <TouchableOpacity onPress={() => router.push(`/review/${review.id}`)}>
+      <ThemedView type="backgroundElement" style={styles.card}>
+        <View style={styles.cardHead}>
+          <ThemedText type="smallBold" numberOfLines={1} style={styles.cardAuthor}>
+            {review.author?.display_name ?? '알 수 없음'}
+          </ThemedText>
+          {location ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {location}
+            </ThemedText>
+          ) : null}
+        </View>
+        {review.quoted_text ? (
+          <ThemedText type="small" style={styles.quote} numberOfLines={3}>
+            “{review.quoted_text}”
+          </ThemedText>
+        ) : null}
+        <ThemedText type="small" numberOfLines={3}>
+          {review.content}
+        </ThemedText>
+        <View style={styles.cardMeta}>
+          {review.images.length > 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              🖼 {review.images.length}
+            </ThemedText>
+          ) : null}
+          <ThemedText type="small" themeColor="textSecondary">
+            ♥ {review.likeCount}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            💬 {review.commentCount}
+          </ThemedText>
+        </View>
+      </ThemedView>
+    </TouchableOpacity>
   );
 }
 
@@ -200,4 +254,9 @@ const styles = StyleSheet.create({
   avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   pillPrimary: { backgroundColor: '#3c87f7', paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, borderRadius: 999 },
   pillText: { color: '#ffffff', fontWeight: '600', fontSize: 13 },
+  card: { borderRadius: Spacing.two, padding: Spacing.three, gap: Spacing.one },
+  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: Spacing.two },
+  cardAuthor: { flex: 1 },
+  quote: { fontStyle: 'italic' },
+  cardMeta: { flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.one },
 });
