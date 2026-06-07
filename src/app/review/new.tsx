@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Alert, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { createReview } from '@/api/reviews';
@@ -11,6 +11,7 @@ import { pickImagesFromLibrary, type PickedImage } from '@/lib/imagePicker';
 import { uploadImageBase64 } from '@/lib/storage';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuthStore } from '@/stores/authStore';
+import { useReviewDraft } from '@/stores/reviewDraftStore';
 
 type LocationMode = 'page' | 'chapter';
 
@@ -26,6 +27,18 @@ export default function NewReviewScreen() {
   const [content, setContent] = useState('');
   const [images, setImages] = useState<PickedImage[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // OCR 화면에서 추출한 문장을 인용란에 반영
+  const draftQuote = useReviewDraft((s) => s.quote);
+  const setDraftQuote = useReviewDraft((s) => s.setQuote);
+  useFocusEffect(
+    useCallback(() => {
+      if (draftQuote) {
+        setQuote((prev) => (prev ? `${prev} ${draftQuote}` : draftQuote));
+        setDraftQuote(null);
+      }
+    }, [draftQuote, setDraftQuote]),
+  );
 
   async function onAddImages() {
     const { images: picked, error } = await pickImagesFromLibrary(5 - images.length);
@@ -83,12 +96,19 @@ export default function NewReviewScreen() {
 
   return (
     <Screen keyboardAvoiding scroll padded contentStyle={styles.content}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
-        인용 문장 (선택)
-      </ThemedText>
+      <View style={styles.quoteHeader}>
+        <ThemedText type="smallBold" themeColor="textSecondary">
+          인용 문장 (선택)
+        </ThemedText>
+        <TouchableOpacity onPress={() => router.push('/review/ocr')}>
+          <ThemedText type="small" style={styles.ocrLink}>
+            📷 사진에서 문장 추출
+          </ThemedText>
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={[inputStyle, styles.multiline]}
-        placeholder="마음에 든 문장을 입력하세요 (촬영·OCR은 추후 지원)"
+        placeholder="마음에 든 문장을 입력하세요 (사진에서 추출 후 편집 가능)"
         placeholderTextColor={theme.textSecondary}
         multiline
         value={quote}
@@ -173,6 +193,8 @@ export default function NewReviewScreen() {
 
 const styles = StyleSheet.create({
   content: { gap: Spacing.two, paddingBottom: Spacing.five },
+  quoteHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  ocrLink: { color: '#3c87f7', fontWeight: '600' },
   input: {
     borderWidth: 1,
     borderRadius: Spacing.two,

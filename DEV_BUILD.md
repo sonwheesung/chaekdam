@@ -3,21 +3,24 @@
 현재 앱은 **Expo Go(SDK 54)** 에서 인증·친구·책·독후감·댓글·좋아요·인앱 알림까지 모두 동작한다.
 아래 두 가지는 네이티브 모듈/서버 배포가 필요해 **dev build** 단계에서 마무리한다.
 
-## 1. OCR 문장 추출 (스펙 §C-7, §6-6)
+## 1. OCR 문장 추출 (스펙 §C-7, §6-6) — 구현 완료, dev build에서 동작
 
-현재 독후감 작성은 **인용 문장 수동 입력**으로 대체되어 있다(`src/app/review/new.tsx`).
-온디바이스 OCR은 Expo Go에서 동작하지 않으므로 dev build에서 붙인다.
+**코드/UI는 모두 구현됨.** `@react-native-ml-kit/text-recognition`(한국어)는 네이티브 모듈이라
+Expo Go에선 안 돌고 **dev build에서만 실제 인식**된다. (Expo Go에선 버튼은 보이나 인식 시 에러 → 안내)
 
-구현 순서:
-1. dev build 준비: `npx expo install expo-dev-client`(설치됨) → `eas build --profile development`
-2. OCR 모듈: `npx expo install @react-native-ml-kit/text-recognition` (config plugin → prebuild 필요)
-3. 카메라: `npx expo install expo-camera` (이미 image-picker 있음 — 촬영은 camera 권장)
-4. 플로우(스펙 §C-7):
-   - 카메라/갤러리로 페이지 촬영 → `expo-image-manipulator`로 회전 보정·리사이즈(설치됨)
-   - ML Kit `recognize()` → block/line/element + bounding box(frame) 반환
-   - 사진 위에 line들을 반투명 박스로 오버레이, 드래그/탭으로 다중 선택(형광펜)
-   - 선택 line들의 text를 순서대로 합쳐 `quoted_text` 후보로 → **편집 단계**(필수) → 저장
-5. 원본 페이지 사진은 선택적으로 `page-photos` 버킷에 보관(비공개, 이미 정책 있음).
+구현된 것:
+- ✅ `src/lib/ocr.ts`: 한국어 인식(`TextRecognitionScript.KOREAN`), line별 bounding box 반환,
+  선택 문장 읽기순 정렬·결합(`combineSelectedLines`)
+- ✅ `src/app/review/ocr.tsx`: 촬영/갤러리 → 인식 → 사진 위 line 박스 오버레이 →
+  **탭으로 색칠(형광펜) 다중 선택** → 미리보기 → "문장 추출"
+- ✅ `src/app/review/new.tsx`: "📷 사진에서 문장 추출" 버튼 → OCR 화면 → 추출 문장이 인용란에
+  채워지고 **직접 편집 가능**(스펙의 편집 단계 충족)
+
+남은 작업:
+1. dev build 생성(아래 2번 푸시와 동일): `eas build --profile development --platform android`
+   - ML Kit는 autolink — 별도 config plugin 불필요, prebuild/빌드에 자동 포함.
+2. (선택) 원본 페이지 사진을 `page-photos` 버킷(비공개, 정책 있음)에 보관.
+3. (선택) 드래그로 영역 선택, 회전 보정(`expo-image-manipulator` 설치됨) 등 정교화.
 
 ## 2. 푸시 알림 발송 (스펙 §E-11, §6-8)
 

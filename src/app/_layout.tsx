@@ -61,6 +61,7 @@ export default function RootLayout() {
             name="review/new"
             options={{ headerShown: true, title: '독후감 작성', presentation: 'modal' }}
           />
+          <Stack.Screen name="review/ocr" options={{ headerShown: true, title: '문장 추출' }} />
           <Stack.Screen name="review/[id]" options={{ headerShown: true, title: '독후감' }} />
         </Stack.Protected>
 
