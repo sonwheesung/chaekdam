@@ -499,6 +499,7 @@ export type Database = {
         Args: { p_review_id: string; p_uid: string }
         Returns: boolean
       }
+      email_for_username: { Args: { p_username: string }; Returns: string }
       is_book_member: {
         Args: { p_book_id: string; p_uid: string }
         Returns: boolean

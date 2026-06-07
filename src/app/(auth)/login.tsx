@@ -11,17 +11,17 @@ import { useAuthStore } from '@/stores/authStore';
 export default function LoginScreen() {
   const theme = useTheme();
   const signIn = useAuthStore((s) => s.signIn);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function onSubmit() {
-    if (!email.trim() || !password) {
-      Alert.alert('입력 확인', '이메일과 비밀번호를 입력하세요.');
+    if (!username.trim() || !password) {
+      Alert.alert('입력 확인', '아이디와 비밀번호를 입력하세요.');
       return;
     }
     setLoading(true);
-    const { error } = await signIn(email.trim(), password);
+    const { error } = await signIn(username.trim(), password);
     setLoading(false);
     if (error) {
       Alert.alert('로그인 실패', error);
@@ -38,13 +38,12 @@ export default function LoginScreen() {
 
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-        placeholder="이메일"
+        placeholder="아이디"
         placeholderTextColor={theme.textSecondary}
         autoCapitalize="none"
-        autoComplete="email"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
+        autoComplete="username"
+        value={username}
+        onChangeText={setUsername}
       />
       <TextInput
         style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}

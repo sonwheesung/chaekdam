@@ -19,7 +19,7 @@ interface AuthState {
 
   /** 세션 복원 + onAuthStateChange 구독. 반환값은 구독 해제 함수. */
   initialize: () => () => void;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (username: string, password: string) => Promise<{ error: string | null }>;
   signUp: (params: SignUpParams) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
@@ -45,9 +45,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     return () => sub.subscription.unsubscribe();
   },
 
-  signIn: async (email, password) => {
+  signIn: async (username, password) => {
+    // 아이디 → 이메일 조회 후 로그인 (Supabase Auth는 이메일 기반)
+    const { data: email, error: rpcErr } = await supabase.rpc('email_for_username', {
+      p_username: username,
+    });
+    if (rpcErr) return { error: rpcErr.message };
+    if (!email) return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    // 아이디 존재 여부가 드러나지 않도록 동일 메시지 사용
+    if (error) return { error: '아이디 또는 비밀번호가 올바르지 않습니다.' };
+    return { error: null };
   },
 
   signUp: async ({ email, password, username, displayName }) => {
