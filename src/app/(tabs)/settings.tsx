@@ -1,5 +1,6 @@
 import { StyleSheet, TouchableOpacity } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
@@ -10,7 +11,7 @@ export default function SettingsScreen() {
   const signOut = useAuthStore((s) => s.signOut);
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen padded contentStyle={styles.content}>
       <ThemedView style={styles.section}>
         <ThemedText type="smallBold">계정</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
@@ -28,12 +29,12 @@ export default function SettingsScreen() {
       <TouchableOpacity style={styles.signOut} onPress={() => signOut()}>
         <ThemedText style={styles.signOutText}>로그아웃</ThemedText>
       </TouchableOpacity>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: Spacing.four, gap: Spacing.four },
+  content: { gap: Spacing.four },
   section: { gap: Spacing.one },
   signOut: {
     marginTop: 'auto',

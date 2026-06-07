@@ -1,16 +1,9 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
+import { Alert, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuthStore } from '@/stores/authStore';
@@ -51,67 +44,56 @@ export default function SignUpScreen() {
   const inputStyle = [styles.input, { color: theme.text, borderColor: theme.backgroundSelected }];
 
   return (
-    <ThemedView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.inner}
-      >
-        <ThemedText type="subtitle">회원가입</ThemedText>
+    <Screen keyboardAvoiding center padded contentStyle={styles.content}>
+      <ThemedText type="subtitle">회원가입</ThemedText>
 
-        <TextInput
-          style={inputStyle}
-          placeholder="아이디 (영문/숫자)"
-          placeholderTextColor={theme.textSecondary}
-          autoCapitalize="none"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          style={inputStyle}
-          placeholder="표시 이름"
-          placeholderTextColor={theme.textSecondary}
-          value={displayName}
-          onChangeText={setDisplayName}
-        />
-        <TextInput
-          style={inputStyle}
-          placeholder="이메일"
-          placeholderTextColor={theme.textSecondary}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={inputStyle}
-          placeholder="비밀번호 (6자 이상)"
-          placeholderTextColor={theme.textSecondary}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+      <TextInput
+        style={inputStyle}
+        placeholder="아이디 (영문/숫자)"
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="none"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput
+        style={inputStyle}
+        placeholder="표시 이름"
+        placeholderTextColor={theme.textSecondary}
+        value={displayName}
+        onChangeText={setDisplayName}
+      />
+      <TextInput
+        style={inputStyle}
+        placeholder="이메일"
+        placeholderTextColor={theme.textSecondary}
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={inputStyle}
+        placeholder="비밀번호 (6자 이상)"
+        placeholderTextColor={theme.textSecondary}
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
 
-        <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
-          <ThemedText style={styles.buttonText}>{loading ? '가입 중…' : '회원가입'}</ThemedText>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
+        <ThemedText style={styles.buttonText}>{loading ? '가입 중…' : '회원가입'}</ThemedText>
+      </TouchableOpacity>
 
-        <Link href="/login" style={styles.link}>
-          <ThemedText type="linkPrimary">이미 계정이 있으신가요? 로그인</ThemedText>
-        </Link>
-      </KeyboardAvoidingView>
-    </ThemedView>
+      <Link href="/login" style={styles.link}>
+        <ThemedText type="linkPrimary">이미 계정이 있으신가요? 로그인</ThemedText>
+      </Link>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  inner: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.three,
-  },
+  content: { gap: Spacing.three },
   input: {
     borderWidth: 1,
     borderRadius: Spacing.two,

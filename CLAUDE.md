@@ -50,6 +50,16 @@ npx supabase gen types typescript --linked > src/types/database.ts  # 타입 재
 - 비즈니스/정책 로직은 컴포넌트가 아니라 `src/domain/`의 순수 함수로 분리하고 테스트 작성.
 - 비밀값은 `.env`에만(커밋 금지). `EXPO_PUBLIC_*`만 클라이언트 번들에 노출.
 
+## UI 규칙 (필수)
+- **모든 화면은 `src/components/screen.tsx`의 `Screen` 컴포넌트로 감싼다.** 화면 루트에서 `ThemedView`/
+  `SafeAreaView`/`ScrollView`를 직접 쓰지 말 것 — `Screen`이 표준 처리를 담당한다.
+- **세이프티 존(SafeArea)**: `Screen`이 노치/상태바/홈 인디케이터 영역 침범을 자동 방지. 헤더가 있는
+  화면은 react-navigation이 top inset을 처리하므로 중복 패딩 걱정 없음.
+- **키보드 가림 방지**: 입력창(`TextInput`)이 있는 화면은 `<Screen keyboardAvoiding>` 사용
+  → 키보드가 입력창을 가리지 않게 회피 + 자동 스크롤(`keyboardShouldPersistTaps="handled"`).
+- 옵션: `center`(세로 가운데), `padded`(기본 여백), `scroll`(스크롤), `edges`(SafeArea 가장자리),
+  `contentStyle`(예: `{ gap }`). 예) 폼 화면 `<Screen keyboardAvoiding center padded>`.
+
 ## 진행 상황 / 다음 단계 (스펙 §6 순서)
 - [x] 1. 스키마/RLS/Storage 마이그레이션 + 타입 생성
 - [x] 2(일부). Expo dev build 스캐폴드 + Auth(이메일/비번) 골격 + 탭/라우트 플레이스홀더
