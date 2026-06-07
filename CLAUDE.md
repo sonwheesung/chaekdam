@@ -62,7 +62,15 @@ npx supabase gen types typescript --linked > src/types/database.ts  # 타입 재
 
 ## 진행 상황 / 다음 단계 (스펙 §6 순서)
 - [x] 1. 스키마/RLS/Storage 마이그레이션 + 타입 생성
-- [x] 2(일부). Expo dev build 스캐폴드 + Auth(이메일/비번) 골격 + 탭/라우트 플레이스홀더
-- [ ] 3. 친구(검색·요청·수락)  4. 책 등록/초대/책장  5. 독후감 폼+피드
-- [ ] 6. OCR 카메라 플로우  7. 댓글·좋아요+Realtime  8. 푸시(Edge Function)+알림 설정
-- [ ] 9. 인앱 알림 화면  10. 마감(에러/빈상태/권한)
+- [x] 2. Expo 스캐폴드 + Auth(이메일/비번, 아이디 중복확인)
+- [x] 3. 친구(검색·요청·수락, 토글 화면)
+- [x] 4. 책 등록(표지 업로드)/친구 초대/수락/책장/책 상세
+- [x] 5. 독후감 폼(인용·페이지/단원·본문·이미지)+피드+상세
+- [~] 6. OCR 카메라 플로우 — **수동 인용 입력으로 대체**, OCR은 dev build 필요 → `DEV_BUILD.md`
+- [x] 7. 댓글·좋아요
+- [~] 8. 알림 — 인앱 적재 트리거 + 설정(전체/야간/세분화) 완료, **푸시 발송은 dev build+Edge Function 배포 필요** → `DEV_BUILD.md`
+- [x] 9. 인앱 알림 화면 + 읽음 처리
+- [x] 10. 빈 상태/로딩/권한(이미지) 처리
+
+남은 네이티브 작업(OCR, 푸시 발송)은 `DEV_BUILD.md` 참조. 푸시 Edge Function 코드는
+`supabase/functions/send-push/index.ts`에 배포 준비 완료.
